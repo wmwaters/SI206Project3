@@ -17,9 +17,17 @@ import tweepy
 import twitter_info # same deal as always...
 import json
 import sqlite3
+import sys
+def uprint(*objects, sep=' ', end='\n', file=sys.stdout):
+    enc = file.encoding
+    if enc == 'UTF-8':
+        print(*objects, sep=sep, end=end, file=file)
+    else:
+        f = lambda obj: str(obj).encode(enc, errors='backslashreplace').decode(enc)
+        print(*map(f, objects), sep=sep, end=end, file=file)
 
-## Your name:
-## The names of anyone you worked with on this project:
+## Your name: William Waters
+## The names of anyone you worked with on this project: Austin McCall
 
 #####
 
@@ -49,18 +57,37 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 
 CACHE_FNAME = "206_APIsAndDBs_cache.json"
 # Put the rest of your caching setup here:
-
-
+try:
+    cache_file = open(CACHE_FNAME,'r')
+    cache_contents = cache_file.read()
+    cache_file.close()
+    CACHE_DICTION = json.loads(cache_contents)
+except:
+    CACHE_DICTION = {}
 
 # Define your function get_user_tweets here:
-
-
-
-
+def get_user_tweets(user):
+    if user in CACHE_DICTION:
+        tweets = CACHE_DICTION[user]
+    else:
+        tweets = api.user_timeline(id=user,count=20)
+        CACHE_DICTION[user] = tweets
+        f = open(CACHE_FNAME,'w')
+        f.write(json.dumps(CACHE_DICTION))
+        f.close()
+        conn = sqlite3.connect('206_APIsAndDBs.sqlite')
+        cur = conn.cursor()
+        cur.execute('DROP TABLE IF EXISTS Tweets')
+        cur.execute('CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, text TEXT, user_posted TEXT, time_posted DATETIME, retweets INTEGER, FOREIGN KEY(user_posted) REFERENCES Users(user_id))')
+        for tweet in CACHE_DICTION[user]:
+        	tweet_tuple = (tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count'])
+        	cur.execute('DROP TABLE IF EXISTS Users')
+        	cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)')
+    return tweets
 
 # Write an invocation to the function for the "umich" user timeline and 
 # save the result in a variable called umich_tweets:
-
+umich_tweets = get_user_tweets('umich')
 
 
 
@@ -142,7 +169,7 @@ joined_data2 = True
 ###### Note that the tests are necessary to pass, but not sufficient -- 
 ###### must make sure you've followed the instructions accurately! 
 ######
-print("\n\nBELOW THIS LINE IS OUTPUT FROM TESTS:\n")
+uprint("\n\nBELOW THIS LINE IS OUTPUT FROM TESTS:\n")
 
 
 class Task1(unittest.TestCase):
