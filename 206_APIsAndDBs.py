@@ -4,7 +4,7 @@
 
 ##THIS STARTER CODE DOES NOT RUN!!
 
-
+ 
 ##OBJECTIVE:
 ## In this assignment you will be creating database and loading data 
 ## into database.  You will also be performing SQL queries on the data.
