@@ -67,10 +67,10 @@ except:
 
 # Define your function get_user_tweets here:
 def get_user_tweets(user):
-    if user in CACHE_DICTION:
+    if user in CACHE_DICTION: #if user is in cache, get their tweets
         tweets = CACHE_DICTION[user]
     else:
-        tweets = api.user_timeline(id=user,count=20)
+        tweets = api.user_timeline(id=user,count=20) #gets 20 tweets from Twitter with username
         CACHE_DICTION[user] = tweets
         f = open(CACHE_FNAME,'w')
         f.write(json.dumps(CACHE_DICTION))
@@ -83,6 +83,12 @@ def get_user_tweets(user):
         	tweet_tuple = (tweet['id_str'], tweet['text'], tweet['user']['id_str'], tweet['created_at'], tweet['retweet_count'])
         	cur.execute('DROP TABLE IF EXISTS Users')
         	cur.execute('CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INTEGER, description TEXT)')
+        for user in CACHE_DICTION.keys(): #puts the tweets from the cache into the database Tweets table
+        	for tweet in CACHE_DICTION[user]:
+        		t = (tweet["id_str"], tweet["text"], tweet["user"]["id_str"], tweet["created_at"], tweet["retweet_count"])
+        		cur.execute("INSERT OR IGNORE INTO Tweets (tweet_id, text, user_posted, time_posted, retweets) VALUES (?, ?, ?, ?, ?)", t)
+        users = {} #compiling list of all users
+        
     return tweets
 
 # Write an invocation to the function for the "umich" user timeline and 
